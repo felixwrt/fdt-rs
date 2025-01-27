@@ -132,13 +132,13 @@ pub enum ParsedTok<'a> {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct DevTreeParseIter<'r, 'dt: 'r> {
+pub struct DevTreeParseIter<'dt> {
     pub offset: usize,
-    pub fdt: &'r DevTree<'dt>,
+    pub fdt: DevTree<'dt>,
 }
 
-impl<'r, 'dt: 'r> DevTreeParseIter<'r, 'dt> {
-    pub fn new(fdt: &'r DevTree<'dt>) -> Self {
+impl<'dt> DevTreeParseIter<'dt> {
+    pub fn new(fdt: DevTree<'dt>) -> Self {
         Self {
             offset: fdt.off_dt_struct(),
             fdt,
@@ -146,9 +146,9 @@ impl<'r, 'dt: 'r> DevTreeParseIter<'r, 'dt> {
     }
 }
 
-impl<'dt, 'a: 'dt> FallibleIterator for DevTreeParseIter<'dt, 'a> {
+impl<'dt> FallibleIterator for DevTreeParseIter<'dt> {
     type Error = DevTreeError;
-    type Item = ParsedTok<'a>;
+    type Item = ParsedTok<'dt>;
 
     fn next(&mut self) -> Result<Option<Self::Item>> {
         // Safe because we're passing an unmodified (by us) offset.

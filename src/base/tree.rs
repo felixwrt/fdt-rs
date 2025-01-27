@@ -266,8 +266,8 @@ impl<'dt> DevTree<'dt> {
 
     /// Returns an iterator over low level parsing tokens, [`ParsedTok`].
     #[must_use]
-    pub fn parse_iter(&self) -> DevTreeParseIter<'_, 'dt> {
-        DevTreeParseIter::new(self)
+    pub fn parse_iter(&self) -> DevTreeParseIter<'dt> {
+        DevTreeParseIter::new(self.clone())
     }
 
     /// Returns the first [`DevTreeNode`] object with the provided compatible device tree property

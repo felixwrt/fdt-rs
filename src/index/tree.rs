@@ -223,7 +223,7 @@ impl<'i, 'dt: 'i> DevTreeIndex<'i, 'dt> {
     // - It is very easy to test in isolation; parsing is entirely enclosed to this module.
     unsafe fn init_builder<'a>(
         buf: &'i mut [u8],
-        iter: &mut DevTreeParseIter<'a, 'dt>,
+        iter: &mut DevTreeParseIter<'dt>,
     ) -> Result<DTIBuilder<'i, 'dt>, DevTreeError> {
         let mut builder = DTIBuilder {
             front_off: 0,
@@ -286,7 +286,7 @@ impl<'i, 'dt: 'i> DevTreeIndex<'i, 'dt> {
     }
 
     pub fn new(fdt: DevTree<'dt>, buf: &'i mut [u8]) -> Result<Self, DevTreeError> {
-        let mut iter = DevTreeParseIter::new(&fdt);
+        let mut iter = DevTreeParseIter::new(fdt);
 
         let mut builder = unsafe { Self::init_builder(buf, &mut iter) }?;
 
