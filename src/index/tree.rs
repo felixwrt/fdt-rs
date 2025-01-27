@@ -266,7 +266,7 @@ impl<'i, 'dt: 'i> DevTreeIndex<'i, 'dt> {
         // + size_of::<DTINode>
         const_assert_eq!(align_of::<DTINode>(), align_of::<DTIProp>());
 
-        let mut iter = DevTreeIter::new(fdt);
+        let mut iter = DevTreeIter::new(fdt.clone());
         while let Some(item) = iter.next()? {
             match item {
                 DevTreeItem::Node(_) => size += size_of::<DTINode>(),

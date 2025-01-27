@@ -246,22 +246,22 @@ impl<'dt> DevTree<'dt> {
     /// Returns an iterator over the Dev Tree "5.3 Memory Reservation Blocks"
     #[must_use]
     pub fn reserved_entries(&self) -> DevTreeReserveEntryIter {
-        DevTreeReserveEntryIter::new(self)
+        DevTreeReserveEntryIter::new(self.clone())
     }
 
     /// Returns an iterator over [`DevTreeNode`] objects
-    pub fn nodes(&self) -> DevTreeNodeIter<'_, 'dt> {
-        DevTreeNodeIter(DevTreeIter::new(self))
+    pub fn nodes(&self) -> DevTreeNodeIter<'dt> {
+        DevTreeNodeIter(DevTreeIter::new(self.clone()))
     }
 
     #[must_use]
-    pub fn props(&self) -> DevTreePropIter<'_, 'dt> {
-        DevTreePropIter(DevTreeIter::new(self))
+    pub fn props(&self) -> DevTreePropIter<'dt> {
+        DevTreePropIter(DevTreeIter::new(self.clone()))
     }
 
     /// Returns an iterator over objects within the [`DevTreeItem`] enum
-    pub fn items(&self) -> DevTreeIter<'_, 'dt> {
-        DevTreeIter::new(self)
+    pub fn items(&self) -> DevTreeIter<'dt> {
+        DevTreeIter::new(self.clone())
     }
 
     /// Returns an iterator over low level parsing tokens, [`ParsedTok`].
@@ -275,7 +275,7 @@ impl<'dt> DevTree<'dt> {
     pub fn compatible_nodes<'s, 'a: 's>(
         &'a self,
         string: &'s str,
-    ) -> DevTreeCompatibleNodeIter<'s, 'a, 'dt> {
+    ) -> DevTreeCompatibleNodeIter<'s, 'dt> {
         DevTreeCompatibleNodeIter {
             iter: self.items(),
             string,
@@ -287,7 +287,7 @@ impl<'dt> DevTree<'dt> {
     }
 
     /// Returns the root [`DevTreeNode`] object of the device tree (if it exists).
-    pub fn root(&self) -> Result<Option<DevTreeNode<'_, 'dt>>> {
+    pub fn root(&self) -> Result<Option<DevTreeNode<'dt>>> {
         self.nodes().next()
     }
 }

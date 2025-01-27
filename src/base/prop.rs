@@ -8,13 +8,13 @@ use unsafe_unwrap::UnsafeUnwrap;
 
 /// A handle to a [`DevTreeNode`]'s Device Tree Property
 #[derive(Clone)]
-pub struct DevTreeProp<'a, 'dt: 'a> {
-    parent_iter: DevTreeIter<'a, 'dt>,
+pub struct DevTreeProp<'dt> {
+    parent_iter: DevTreeIter<'dt>,
     propbuf: &'dt [u8],
     nameoff: usize,
 }
 
-impl<'a, 'dt: 'a> PartialEq for DevTreeProp<'a, 'dt> {
+impl<'dt> PartialEq for DevTreeProp<'dt> {
     fn eq(&self, other: &Self) -> bool {
         ptr::eq(self.propbuf, other.propbuf)
             && self.parent_iter == other.parent_iter
@@ -22,8 +22,8 @@ impl<'a, 'dt: 'a> PartialEq for DevTreeProp<'a, 'dt> {
     }
 }
 
-impl<'r, 'dt: 'r> PropReader<'dt> for DevTreeProp<'r, 'dt> {
-    type NodeType = DevTreeNode<'r, 'dt>;
+impl<'dt> PropReader<'dt> for DevTreeProp<'dt> {
+    type NodeType = DevTreeNode<'dt>;
 
     #[inline]
     fn propbuf(&self) -> &'dt [u8] {
@@ -37,12 +37,12 @@ impl<'r, 'dt: 'r> PropReader<'dt> for DevTreeProp<'r, 'dt> {
 
     #[inline]
     fn fdt(&self) -> &DevTree<'dt> {
-        self.parent_iter.fdt
+        &self.parent_iter.fdt
     }
 
     /// Returns the node which this property is attached to
     #[must_use]
-    fn node(&self) -> DevTreeNode<'r, 'dt> {
+    fn node(&self) -> DevTreeNode<'dt> {
         unsafe {
             // Unsafe unwrap okay.
             // We're look back in the tree - our parent node is behind us.
@@ -51,9 +51,9 @@ impl<'r, 'dt: 'r> PropReader<'dt> for DevTreeProp<'r, 'dt> {
     }
 }
 
-impl<'a, 'dt: 'a> DevTreeProp<'a, 'dt> {
+impl<'dt> DevTreeProp<'dt> {
     pub(super) fn new(
-        parent_iter: DevTreeIter<'a, 'dt>,
+        parent_iter: DevTreeIter<'dt>,
         propbuf: &'dt [u8],
         nameoff: usize,
     ) -> Self {

@@ -4,14 +4,14 @@ use crate::base::{DevTreeNode, DevTreeProp};
 
 /// An enum which contains either a [`DevTreeNode`] or a [`DevTreeProp`]
 #[derive(Clone, PartialEq)]
-pub enum DevTreeItem<'a, 'dt: 'a> {
-    Node(DevTreeNode<'a, 'dt>),
-    Prop(DevTreeProp<'a, 'dt>),
+pub enum DevTreeItem<'dt> {
+    Node(DevTreeNode<'dt>),
+    Prop(DevTreeProp<'dt>),
 }
 
-impl<'a, 'dt: 'a> UnwrappableDevTreeItem<'dt> for DevTreeItem<'a, 'dt> {
-    type TreeNode = DevTreeNode<'a, 'dt>;
-    type TreeProp = DevTreeProp<'a, 'dt>;
+impl<'dt> UnwrappableDevTreeItem<'dt> for DevTreeItem<'dt> {
+    type TreeNode = DevTreeNode<'dt>;
+    type TreeProp = DevTreeProp<'dt>;
 
     #[inline]
     fn node(self) -> Option<Self::TreeNode> {
