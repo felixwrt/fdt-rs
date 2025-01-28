@@ -1,5 +1,9 @@
 extern crate fdt_rs;
 
+use std::str::Utf8Error;
+
+use fdt_rs::base::iters::{DevTreeIter, DevTreePropIter};
+use fdt_rs::base::parse::{next_devtree_token, ParsedTok};
 use fdt_rs::base::DevTree;
 use fdt_rs::error::{DevTreeError, Result};
 use fdt_rs::index::DevTreeIndex;
@@ -69,6 +73,125 @@ fn get_fdt_index<'dt>() -> FdtIndex<'dt> {
             index: DevTreeIndex::new(devtree, slice).unwrap(),
             _vec: vec,
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Node<'dt> {
+    name: std::result::Result<&'dt str, Utf8Error>,
+    props_offset: usize,
+}
+
+struct NodesWithParents<'dt, const N: usize> {
+    data: DevTree<'dt>,
+    parents: [Node<'dt>; N],
+    depth: usize,
+    offset: usize,
+}
+
+impl<'dt, const N: usize> NodesWithParents<'dt, N> {
+    fn new(data: DevTree<'dt>) -> Self {
+        Self {
+            data,
+            parents: [const { Node { name: Ok(""), props_offset: 0}}; N],
+            depth: 0,
+            offset: data.off_dt_struct(),
+        }
+    }
+
+    fn next(&mut self) -> Option<(Node, &[Node])> {
+        unsafe {
+            while let Some(x) = next_devtree_token(self.data.buf(), &mut self.offset).unwrap() {
+                match x {
+                    ParsedTok::BeginNode(parsed_begin_node) => {
+                        let node = Node {
+                            name: std::str::from_utf8(parsed_begin_node.name),
+                            props_offset: self.offset,
+                        };
+                        self.parents[self.depth] = node;
+                        self.depth += 1;
+                        return Some((node, &self.parents[..(self.depth-1)]))
+                    }
+                    ParsedTok::EndNode => {
+                        self.depth -= 1;
+                    }
+                    ParsedTok::Prop(_) => {}
+                    ParsedTok::Nop => {}
+                }
+                // dbg!(x);
+            }
+        }
+        None
+    }
+}
+
+#[test]
+fn foo_2() {
+    unsafe {
+        let blob = DevTree::new(FDT).unwrap();
+        let mut iter = NodesWithParents::<5>::new(blob);
+        while let Some((node, parents)) = iter.next() {
+            for p in parents {
+                print!("{:?} / ", p.name);
+            }
+            println!("{:?}", node.name);
+            
+            print!("  Props: ");
+            let mut inner_offset = node.props_offset;
+            while let Some(ParsedTok::Prop(p)) =
+                next_devtree_token(blob.buf(), &mut inner_offset).unwrap()
+            {
+                print!("{} ", p.prop_buf.len())
+            }
+            println!();
+        }
+    }
+}
+
+#[test]
+fn foo() {
+    unsafe {
+        let blob = DevTree::new(FDT).unwrap();
+        let mut offset = blob.off_dt_struct();
+        let mut indent = 0;
+        while let Some(x) = next_devtree_token(blob.buf(), &mut offset).unwrap() {
+            match x {
+                ParsedTok::BeginNode(parsed_begin_node) => {
+                    let node = Node {
+                        name: std::str::from_utf8(parsed_begin_node.name),
+                        props_offset: offset,
+                    };
+                    for _ in 0..indent {
+                        print!(" ");
+                    }
+                    print!("{:?}: ", node);
+                    let mut inner_offset = node.props_offset;
+                    while let Some(ParsedTok::Prop(p)) =
+                        next_devtree_token(blob.buf(), &mut inner_offset).unwrap()
+                    {
+                        print!("{} ", p.prop_buf.len())
+                    }
+                    println!();
+                    indent += 4;
+                }
+                ParsedTok::EndNode => {
+                    indent -= 4;
+                }
+                ParsedTok::Prop(parsed_prop) => {}
+                ParsedTok::Nop => {}
+            }
+            // dbg!(x);
+        }
+        // while let Some(x) = iter.next_item().unwrap() {
+        //     match x {
+        //         fdt_rs::base::DevTreeItem::Node(dev_tree_node) => {
+        //             println!("name: {}", dev_tree_node.name().unwrap());
+        //         },
+        //         fdt_rs::base::DevTreeItem::Prop(dev_tree_prop) => {
+        //             println!("prop: {:?}",  &dev_tree_prop.propbuf());
+        //         },
+        //     }
+        // }
     }
 }
 
